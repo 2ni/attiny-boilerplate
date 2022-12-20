@@ -1,0 +1,16 @@
+.DS_Store
+.python-version
+__pycache__/
+*.swp
+*.o
+*.d
+*.done
+*.hex
+*.elf
+*.atpack
+*.sym
+*.asm
+pack/
+toolchain_*
+src/
+*.backup
