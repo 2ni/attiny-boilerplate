@@ -120,10 +120,10 @@ flash: all
 
 # reset device
 reset:
-	@$(PYPRG) -r && echo "done" && echo "\a" && $(MAKE) serial  port=$(PORT) # && afplay /System/Library/Sounds/Ping.aiff -v 20
+	@$(PYPRG) reset && echo "done" && echo "\a" && $(MAKE) serial port=$(PORT) # && afplay /System/Library/Sounds/Ping.aiff -v 20
 
 resetonly:
-	@$(PYPRG) -r
+	@$(PYPRG) reset
 
 # generate disassembly files for debugging
 disasm: $(PRJ).elf
