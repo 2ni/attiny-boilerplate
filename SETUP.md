@@ -5,7 +5,9 @@ you can use this template for your prject as follows:
 ```
 git remote add template https://github.com/2ni/attiny-boilerplate
 git fetch --all
+[git diff template/main]
 git merge template/main [--allow-unrelated-histories]
+[git diff origin/main..HEAD]
 ```
 
 ### INSTALLATION
