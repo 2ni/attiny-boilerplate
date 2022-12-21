@@ -3,7 +3,7 @@ This is a template to work with the ATtiny series programmed by updi, such as AT
 
 The [SETUP](SETUP.md) explains how to set up a new project including the toolchain from microchip to be able to compile your code for the mcu's. The advantage (or disadvantage) is, that you don't need to use the IDE from microchip (eg [Microchip Studio](https://www.microchip.com/en-us/tools-resources/develop/microchip-studio)).
 
-I work mostly with the ATtiny3217, but also did some projects with ATtiny1604 and ATtiny1627. For this purpose I developed a developer board and a programmer which is also a serial terminal. It's possible to flash the chip via the programmer and also to communicate via serial (tx and rx) by using only one usb port.
+I work mostly with the ATtiny3217, but also did some projects with ATtiny1604 and ATtiny1627. For this purpose I designed a [developer board](https://github.com/2ni/attiny3217-dev-board) and a programmer which is also a serial terminal. It's possible to flash the chip via the programmer and also to communicate via serial (tx and rx) by using only one usb port.
 
 ## Getting started
 Have a look at the [SETUP](SETUP.md), but basically you can do the following:
