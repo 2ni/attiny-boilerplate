@@ -1,3 +1,13 @@
+### HOWTO
+you can use this template for your prject as follows:
+1. create a new repo with your project
+2. run the following commands to merge the template into your project
+```
+git remote add template https://github.com/2ni/attiny-boilerplate
+git fetch --all
+git merge template/main [--allow-unrelated-histories]
+```
+
 ### INSTALLATION
 ```
 git clone --recurse-submodules git@github.com:2ni/attiny-boilerplate.git
