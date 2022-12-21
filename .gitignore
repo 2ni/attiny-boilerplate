@@ -13,5 +13,4 @@ iotn*.h
 *.asm
 pack/
 toolchain_*
-src/
 *.backup

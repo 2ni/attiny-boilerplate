@@ -1,3 +1,4 @@
 [submodule "python_src/pymcuprog"]
 	path = src_python/pymcuprog
 	url = https://github.com/microchip-pic-avr-tools/pymcuprog
+  ignore = dirty
