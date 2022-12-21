@@ -19,8 +19,7 @@ pip install -r requirements.txt
 make patch # patch pymcuprg for our serial / writer
 
 # install pymcuprog
-cd src_python/pymcuprog
-pip install -r requirements.txt
+pip install -r src_python/pymcuprog/requirements.txt
 pip install -e src_python/pymcuprog  # to have proper paths
 
 # install microchip toolchain
@@ -32,6 +31,7 @@ Only needed if not using `-recurse-submodules` when cloning.
 ```
 git submodule init
 git submodule update
+pip install -r src_python/pymcuprog/requirements.txt
 pip install -e src_python/pymcuprog # to have prope paths
 ```
 
