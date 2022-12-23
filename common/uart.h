@@ -17,9 +17,15 @@
 #define USART_BPS   19200
 #define USART_BAUD_RATE(BAUD_RATE) ((float)(F_CPU * 64 / (16 * (float)BAUD_RATE)) + 0.5)
 
+/*
+ * to overwrite, add your own config.h file where you overwrite the settings
+ * and include config.h before uart.h in your code
+ */
+#ifndef USART_PORT
 #define USART_PORT PORTA
 #define USART_TX PIN1_bm
 #define USART_RX PIN2_bm
+#endif
 
 // DEBUG set in Makefile
 #ifdef DEBUG
