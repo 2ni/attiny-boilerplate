@@ -19,12 +19,12 @@ class STEPPER {
 
   private:
     void move_one_step(int8_t direction);
-    PORT_t &PA = PORTA;
-    PORT_t &PB = PORTB;
+    PORT_t *PA;
+    PORT_t *PB;
     uint8_t INA1, INA2, INB1, INB2;
 
     int8_t current_step, direction;
-    uint8_t force_stop, speed;
+    uint8_t speed;
     int16_t steps_left;
     uint32_t last_tick;
     uint32_t *current_tick;

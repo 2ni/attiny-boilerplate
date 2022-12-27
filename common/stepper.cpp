@@ -4,13 +4,13 @@ STEPPER::STEPPER() {
 }
 
 void STEPPER::init(PORT_t &PA, uint8_t INA1, uint8_t INA2, PORT_t &PB, uint8_t INB1, uint8_t INB2, uint32_t *current_tick) {
-  this->PA = PA;
-  this->PA.DIR |= INA1 | INA2;
+  this->PA = &PA;
+  this->PA->DIR |= INA1 | INA2;
   this->INA1 = INA1;
   this->INA2 = INA2;
 
-  this->PB = PB;
-  this->PB.DIR |= INB1 | INB2;
+  this->PB = &PB;
+  this->PB->DIR |= INB1 | INB2;
   this->INB1 = INB1;
   this->INB2 = INB2;
 
@@ -23,28 +23,28 @@ void STEPPER::init(PORT_t &PA, uint8_t INA1, uint8_t INA2, PORT_t &PB, uint8_t I
 void STEPPER::set_step(uint8_t step) {
   switch (step) {
     case 0: // 1010
-      PA.OUTSET = INA1;
-      PA.OUTCLR = INA2;
-      PB.OUTSET = INB1;
-      PB.OUTCLR = INB2;
+      PA->OUTSET = INA1;
+      PA->OUTCLR = INA2;
+      PB->OUTSET = INB1;
+      PB->OUTCLR = INB2;
       break;
     case 1: // 0110
-      PA.OUTCLR = INA1;
-      PA.OUTSET = INA2;
-      PB.OUTSET = INB1;
-      PB.OUTCLR = INB2;
+      PA->OUTCLR = INA1;
+      PA->OUTSET = INA2;
+      PB->OUTSET = INB1;
+      PB->OUTCLR = INB2;
       break;
     case 2: // 0101
-      PA.OUTCLR = INA1;
-      PA.OUTSET = INA2;
-      PB.OUTCLR = INB1;
-      PB.OUTSET = INB2;
+      PA->OUTCLR = INA1;
+      PA->OUTSET = INA2;
+      PB->OUTCLR = INB1;
+      PB->OUTSET = INB2;
       break;
     case 3: // 1001
-      PA.OUTSET = INA1;
-      PA.OUTCLR = INA2;
-      PB.OUTCLR = INB1;
-      PB.OUTSET = INB2;
+      PA->OUTSET = INA1;
+      PA->OUTCLR = INA2;
+      PB->OUTCLR = INB1;
+      PB->OUTSET = INB2;
       break;
   }
 }
@@ -58,9 +58,8 @@ void STEPPER::move_one_step(int8_t direction) {
 }
 
 void STEPPER::stop() {
-  PA.OUT &= ~(INA1 | INA2);
-  PB.OUT &= ~(INB1 | INB2);
-  force_stop = 1;
+  PA->OUT &= ~(INA1 | INA2);
+  PB->OUT &= ~(INB1 | INB2);
   steps_left = 0;
 }
 
