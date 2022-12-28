@@ -2,8 +2,8 @@
  * make mcu=attiny1604 port=1 flash
  *
  * hall sensors
- * LIMIT1 = PB1 (position = 0, left) (move to here: -1500)
- * LIMIT2 = PB0 (position = 1, right) (move to here: 1500)
+ * LIMIT1 = PB1 (position = 1, left) (move to here: -1500)
+ * LIMIT2 = PB0 (position = 0, right) (move to here: 1500)
  *
  * stepper:
  * INA1 = PA7
