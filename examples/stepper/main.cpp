@@ -14,13 +14,42 @@
 
 #include <util/delay.h>
 #include <avr/io.h>
+#include <avr/interrupt.h>
+#include <avr/pgmspace.h> // for PSTR
 #include "uart.h"
 #include "stepper.h"
-#include <avr/interrupt.h>
+#include "misc.h"
 
+UART uart;
 STEPPER stepper;
 uint32_t current_tick = 0;
 volatile uint8_t limit = 0;
+
+/*
+ * isr for uart tx
+ */
+ISR(USART0_DRE_vect) {
+  uart.isr_tx();
+}
+
+/*
+ * isr for uart rx
+ */
+ISR(USART0_RXC_vect) {
+  char in = USART0.RXDATAL;
+  switch (in) {
+    case '0': // move right possible if sensor right != 0
+      if ((PORTB.IN & PIN0_bm) != 0) {
+        stepper.move(100, 1);
+      }
+      break;
+    case '1': // move left
+      if ((PORTB.IN & PIN1_bm) != 0) {
+        stepper.move(-100, 1);
+      }
+      break;
+  }
+}
 
 /*
  * isr for rtc tick every ~1ms
@@ -56,31 +85,14 @@ ISR(PORTB_PORT_vect) {
   }
 }
 
-/*
- * isr for uart input
- */
-ISR(USART0_RXC_vect) {
-  char in = USART0.RXDATAL;
-  switch (in) {
-    case '0': // move right possible if sensor right != 0
-      if ((PORTB.IN & PIN0_bm) != 0) {
-        stepper.move(100, 1);
-      }
-      break;
-    case '1': // move left
-      if ((PORTB.IN & PIN1_bm) != 0) {
-        stepper.move(-100, 1);
-      }
-      break;
-  }
-}
-
 int main(void) {
   _PROTECTED_WRITE(CLKCTRL.MCLKCTRLB, CLKCTRL_PDIV_2X_gc | CLKCTRL_PEN_bm); // 10MHz
 
   PORTMUX.CTRLB = PORTMUX_USART0_ALTERNATE_gc;
 
-  uart_init(1);
+  uart.hello();
+  uart.enable_rx();
+
   PORTA.DIRSET = PIN4_bm; // set PA4 (led green) as output
   PORTA.DIRSET = PIN3_bm; // set PA3 (led red) as output
   PORTB.PIN1CTRL = PORT_PULLUPEN_bm | PORT_ISC_BOTHEDGES_gc; // limits, detect when limit reached and left
@@ -114,7 +126,7 @@ int main(void) {
     }
   }
 
-  DL("1=left, 0=right");
+  uart.DL(PSTR("1=left, 0=right"));
   stepper.init(PORTA, PIN7_bm, PIN6_bm, PORTB, PIN2_bm, PIN3_bm, &current_tick);
   while (1) {
     stepper.loop();

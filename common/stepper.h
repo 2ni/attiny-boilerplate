@@ -1,7 +1,3 @@
-/*
- * pin configuration settings for forgetmenot
- */
-
 #ifndef __STEPPER_H__
 #define __STEPPER_H__
 

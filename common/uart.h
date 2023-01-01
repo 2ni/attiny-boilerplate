@@ -1,78 +1,77 @@
-/*
- * simple bitbanging (software) UART to debug output
- * write only
- *
- * TODO: use clk interrupts, eg https://github.com/MarcelMG/AVR8_BitBang_UART_TX/blob/master/main.c
- * TODO: use USART TxD (PB2) from chip instead of software solution
- * inspidred by
- * - http://www.justgeek.de/a-simple-simplex-uart-for-debugging-avrs/
- * - https://github.com/MartinD-CZ/AVR-Li-Ion-charger/blob/master/firmware/ATtiny%20USB%20charger/
- */
 #ifndef __UART_H__
 #define __UART_H__
-#include <avr/pgmspace.h> // for PSTR
-#include <stdio.h>
-#include <avr/io.h>
 
-#define USART_BPS   19200
-#define USART_BAUD_RATE(BAUD_RATE) ((float)(F_CPU * 64 / (16 * (float)BAUD_RATE)) + 0.5)
+#include <avr/io.h>
+#include <stdio.h>
+#include <avr/pgmspace.h> // for PSTR
+
+// can be overwritten, if set before calling "uart.h"
+#ifndef TX_BUFF_SIZE
+  #define TX_BUFF_SIZE 16
+#endif
 
 /*
- * to overwrite, add your own config.h file where you overwrite the settings
- * and include config.h before uart.h in your code
+ * https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
+ * https://stackoverflow.com/questions/3219393/stdlib-and-colored-output-in-c
+ *
+ * eg uart.DF(NOK("Failures!!!: %u/%u.") "\n", number_of_failed, number_of_tests);
  */
-#ifndef USART_PORT
-#define USART_PORT PORTA
-#define USART_TX PIN1_bm
-#define USART_RX PIN2_bm
-#endif
+#define NOK(str)  "\033[31;1m" str "\033[0m"  // output in red
+#define OK(str)   "\033[32;1m" str "\033[0m"  // output in green
+#define WARN(str) "\033[33;1m" str "\033[0m"  // output in yellow
+#define BOLD(str) "\033[1m" str "\033[0m"     // output bold
 
-// DEBUG set in Makefile
-#ifdef DEBUG
-  #define DINIT()            uart_init()
-  #define DLF()              uart_send_string_p(PSTR("\n"))
-  #define D(str)             uart_send_string_p(PSTR(str))
-  #define DL(str)            { uart_send_string_p(PSTR(str)); DLF(); }
-  #define DF(format, ...)    { char uart_buf[120]; sprintf(uart_buf, format, __VA_ARGS__); uart_send_string(uart_buf); }
-  #define DT_C(key, value)   uart_tuple(PSTR(key), PSTR(value))
-  #define DT_S(key, value)   uart_tuple(PSTR(key), value)
-  #define DT_I(key, value)   uart_tuple(PSTR(key), value)
-  #define DT_IH(key, value)  uart_tuple(PSTR(key), value, 16)
-  // https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
-  // https://stackoverflow.com/questions/3219393/stdlib-and-colored-output-in-c
-  #define NOK(str)           "\033[31;1m" str "\033[0m"  // output in red
-  #define OK(str)            "\033[32;1m" str "\033[0m"  // output in green
-  #define WARN(str)          "\033[33;1m" str "\033[0m"  // output in yellow
-  #define BOLD(str)          "\033[1m" str "\033[0m"     // output bold
-#else
-  #define DINIT()
-  #define D(str)
-  #define DLF()
-  #define DL(str)
-  #define DF(size, format, ...)
-  #define DT_C(key, value)
-  #define DT_S(key, value)
-  #define DT_I(key, value)
-  #define DT_IH(key, value)
-#endif
+class UART {
+  public:
+    UART();
+    UART(USART_t &USART, PORT_t &PORT, uint8_t PIN_RX, uint8_t PIN_TX, uint16_t BPS);
+    void     init(USART_t &USART, PORT_t &PORT, uint8_t PIN_RX, uint8_t PIN_TX, uint16_t BPS=19200);
+    void     init();
+    void     hello();
+    void     enable_rx();
+    uint8_t  is_busy();
+    uint8_t  u2c(char *buf, uint16_t value, uint8_t precision=2);
+    uint8_t  sec2human(char *buf, uint16_t seconds);
+    void     arr(const char *name, uint8_t *arr, uint8_t len, uint8_t newline);
+    void     isr_tx();
+    // void     DF(const char *format, ...);
+    void     D(const char *str);
+    void     DL(const char *str);
+    template<typename... Args>
+    void     DF(const char *format, Args... args);
 
-void     uart_init(uint8_t enable_rx = 0);
-void     uart_tuple(const char* key, const char* value);
-void     uart_tuple(const char* key, uint16_t value, uint8_t base=10);
-void     uart_tuple(const char *key, uint8_t value, uint8_t base=10);
-void     uart_tuple(const char* key, char* value);
-void     uart_send_char(unsigned char c);
-uint8_t  uart_is_busy();
-void     uart_send_string(char* s);
-void     uart_send_string_p(const char* s);
-void     uart_send_digit(uint16_t value, uint8_t base=10);
-uint8_t  uart_u2c(char *buf, uint16_t value, uint8_t precision=2);
-void     uart_arr(const char *name, uint8_t *arr, uint8_t len, uint8_t new_line=1);
-uint8_t  uart_sec2human(char *buf, uint16_t seconds);
-void     uart_rollover(uint8_t *value, uint8_t max);
-void     uart_rollover(volatile uint8_t *value, uint8_t max);
-void     uart_rollbefore(uint8_t *value, uint8_t max);
-void     uart_rollbefore(volatile uint8_t *value, uint8_t max);
-uint32_t get_deviceid();
+  private:
+    void     send_char(unsigned char c);
+    void     send_string(char *s);
+    void     send_string_p(const char *s);
+    void     rollover(uint8_t *value, uint8_t max);
+    void     rollover(volatile uint8_t *value, uint8_t max);
+    void     rollbefore(uint8_t *value, uint8_t max);
+    void     rollbefore(volatile uint8_t *value, uint8_t max);
+
+    uint8_t tx_buff[TX_BUFF_SIZE];
+    uint8_t tx_in; // pointer of filling buffer
+    volatile uint8_t tx_out; // pointer of sending
+    USART_t *USART;
+};
+
+template<typename... Args>
+void UART::DF(const char *format, Args... args) {
+  char buf[100];
+  snprintf(buf, sizeof(buf), format, args...);
+  send_string(buf);
+}
+
+inline void UART::isr_tx() {
+  // nothing to send
+  if (this->tx_in == this->tx_out) {
+    this->USART->CTRLA &= ~USART_DREIE_bm;
+    return;
+  }
+
+  this->USART->TXDATAL = tx_buff[tx_out];
+  this->USART->STATUS = USART_TXCIF_bm; // clear txcif
+  this->rollover(&tx_out, TX_BUFF_SIZE);
+}
 
 #endif

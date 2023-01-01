@@ -89,7 +89,7 @@ uint8_t pgm_read_byte(const char *elm) {
  * override
  */
 void itoa(uint8_t value, char *str, uint8_t base) {
-  sprintf(str, "%u", value);
+  snprintf(str, 120, "%u", value);
 }
 
 /*
