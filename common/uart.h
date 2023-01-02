@@ -32,7 +32,7 @@ class UART {
     uint8_t  is_busy();
     uint8_t  u2c(char *buf, uint16_t value, uint8_t precision=2);
     uint8_t  sec2human(char *buf, uint16_t seconds);
-    void     arr(const char *name, uint8_t *arr, uint8_t len, uint8_t newline);
+    void     arr(const char *name, uint8_t *arr, uint8_t len, uint8_t newline = 0);
     void     isr_tx();
     // void     DF(const char *format, ...);
     void     D(const char *str);
