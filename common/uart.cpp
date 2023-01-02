@@ -152,28 +152,6 @@ uint8_t UART::sec2human(char *buf, uint16_t secs) {
 }
 
 /*
- * fast implemention to print arrays
- * (avoid using any printf call)
- */
-void UART::arr(const char *name, uint8_t *arr, uint8_t len, uint8_t newline) {
-  const char *name_start = name;
-  while (*name) send_char(*name++);
-  if (name_start != name) {
-    send_char(':');
-    send_char(' ');
-  }
-
-  for (uint8_t i=0; i<len; i++) {
-    uint8_t hi = (arr[i] >> 4) & 0xf;
-    uint8_t lo = arr[i] & 0xf;
-    send_char(hi < 10 ? '0' + hi : ('a' + hi - 10));
-    send_char(lo < 10 ? '0' + lo : ('a' + lo - 10));
-    if (i<(len-1)) send_char(' ');
-  }
-  if (newline) send_char('\n');
-}
-
-/*
  * increment value and wrap around if > max
  * (for ring buffer)
  */
@@ -208,8 +186,35 @@ void UART::DF(const char *format, ...) {
 }
 */
 
+/*
+ * fast implemention to print arrays
+ * (avoid using any printf call)
+ */
+void UART::ARR(const char *name, uint8_t *arr, uint8_t len, uint8_t newline) {
+  #ifdef DEBUG
+    const char *name_start = name;
+    while (*name) send_char(*name++);
+    if (name_start != name) {
+      send_char(':');
+      send_char(' ');
+    }
+
+    for (uint8_t i=0; i<len; i++) {
+      uint8_t hi = (arr[i] >> 4) & 0xf;
+      uint8_t lo = arr[i] & 0xf;
+      send_char(hi < 10 ? '0' + hi : ('a' + hi - 10));
+      send_char(lo < 10 ? '0' + lo : ('a' + lo - 10));
+      if (i<(len-1)) send_char(' ');
+    }
+    if (newline) send_char('\n');
+  #endif
+}
+
+
 void UART::D(const char *str) {
-  send_string_p(str);
+  #ifdef DEBUG
+    send_string_p(str);
+  #endif
 }
 
 /*
@@ -217,6 +222,8 @@ void UART::D(const char *str) {
  * but program gets lower, data stays same, even free_ram()
  */
 void UART::DL(const char *str) {
-  D(str);
-  send_string_p("\n");
+  #ifdef DEBUG
+    D(str);
+    send_string_p("\n");
+  #endif
 }
