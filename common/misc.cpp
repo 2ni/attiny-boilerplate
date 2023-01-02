@@ -2,6 +2,14 @@
 #include <util/delay.h>
 #include "misc.h"
 
+void setup_clk() {
+  #if F_CPU == 10000000
+    _PROTECTED_WRITE(CLKCTRL.MCLKCTRLB, CLKCTRL_PDIV_2X_gc | CLKCTRL_PEN_bm); // 10MHz
+  #elif F_CPU == 5000000
+    _PROTECTED_WRITE(CLKCTRL.MCLKCTRLB, CLKCTRL_PDIV_4X_gc | CLKCTRL_PEN_bm); // 5MHz
+  #endif
+}
+
 /*
  *  get 24bit device id
  *  can be printed with DF("Hello from 0x%06lX", get_deviceid());

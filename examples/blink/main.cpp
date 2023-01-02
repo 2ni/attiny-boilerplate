@@ -22,7 +22,8 @@ ISR(USART0_DRE_vect) {
 }
 
 int main(void) {
-  _PROTECTED_WRITE(CLKCTRL.MCLKCTRLB, CLKCTRL_PDIV_2X_gc | CLKCTRL_PEN_bm); // 10MHz
+  setup_clk();
+
   _PROTECTED_WRITE(CLKCTRL.XOSC32KCTRLA, CLKCTRL_ENABLE_bm | CLKCTRL_RUNSTDBY_bm); // external xtal for 32.768kHz in use with eg attiny3217
   while (CLKCTRL.MCLKSTATUS & CLKCTRL_XOSC32KS_bm);
 

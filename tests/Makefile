@@ -1,4 +1,4 @@
-# gcc -DF_CPU=10000000 -std=c++11 -I mocks -I ../common uart.cpp test.cpp main.cpp -o test && ./test
+# gcc -DF_CPU=10000000 -D__AVR_ATtiny3217__=attiny3217 -DTEST -DDEBUG -std=c++11 -Wno-format  -I ./mocks -I ../common -o test  ../common/uart.cpp  ./delay.cpp ./main.cpp ./misc.cpp ./test.cpp ./tests_uart.cpp && ./test
 
 PRJ        = test
 CLK        = 10000000

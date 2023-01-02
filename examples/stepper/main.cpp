@@ -86,7 +86,7 @@ ISR(PORTB_PORT_vect) {
 }
 
 int main(void) {
-  _PROTECTED_WRITE(CLKCTRL.MCLKCTRLB, CLKCTRL_PDIV_2X_gc | CLKCTRL_PEN_bm); // 10MHz
+  setup_clk();
 
   PORTMUX.CTRLB = PORTMUX_USART0_ALTERNATE_gc;
 
