@@ -53,6 +53,7 @@ OBJCOPY    = $(BIN)avr-objcopy
 OBJDUMP    = $(BIN)avr-objdump
 SIZE       = $(BIN)avr-objdump -Pmem-usage
 CC         = $(BIN)avr-gcc
+MEMORY     = $(BIN)avr-size
 
 # objects
 # CFILES     = $(wildcard $(SRC)/*.c)
@@ -135,6 +136,9 @@ disasm: $(PRJ).elf
 tests:
 	@$(MAKE) -C tests
 
+# show detailed memory usage
+memory: $(PRJ).elf
+	$(MEMORY) -A main.elf
 patch:
 	@cd ./src_python/pymcuprog/ && git apply ../../pymcuprog.patch
 	@echo "DONE. Don't forget to run pip install -e src_python/pymcuprog"
