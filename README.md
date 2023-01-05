@@ -50,7 +50,9 @@ make [mcu=attiny3217] check                                       # checks the c
 ```
 
 ## Some example projects
-- Blink
+- [Blink](/examples/blink)
 A simple led blinking. You can load it with ./activate examples/blink
-- [DCC simulator]()
-Simulator to test eg trackswitches or decoders for model railroads
+- [DCC simulator](/examples/dcc-simulator)
+Simulator to test eg turnouts/trackswitches or decoders for model railroads
+- [Stepper](/examples/stepper)
+Control a 4-wire stepper motor

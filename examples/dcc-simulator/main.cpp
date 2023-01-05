@@ -3,6 +3,8 @@
  * creates a DCC signal which can be controlled via uart commands.
  * "help" shows all possible commands
  *
+ * make mcu=attiny3217 [nodebug=1] flash
+ *
  */
 #include <avr/interrupt.h>
 #include <avr/io.h>
