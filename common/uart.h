@@ -62,6 +62,11 @@ class UART {
     uint8_t  u2c(char *buf, uint16_t value, uint8_t precision=2);
     uint8_t  sec2human(char *buf, uint16_t seconds);
     void     isr_tx();
+    // these functions can also be used outside of the uart class in combination with buffers
+    static void     rollbefore(uint8_t *value, uint8_t max);
+    static void     rollbefore(volatile uint8_t *value, uint8_t max);
+    static void     rollover(uint8_t *value, uint8_t max);
+    static void     rollover(volatile uint8_t *value, uint8_t max);
     // void     DF(const char *format, ...);
     void     ARR(const char *name, uint8_t *arr, uint8_t len, uint8_t newline = 0);
     void     D(const char *str);
@@ -73,10 +78,6 @@ class UART {
     void     send_char(unsigned char c);
     void     send_string(char *s);
     void     send_string_p(const char *s);
-    void     rollover(uint8_t *value, uint8_t max);
-    void     rollover(volatile uint8_t *value, uint8_t max);
-    void     rollbefore(uint8_t *value, uint8_t max);
-    void     rollbefore(volatile uint8_t *value, uint8_t max);
 
     uint8_t tx_buff[TX_BUFF_SIZE];
     uint8_t tx_in; // pointer of filling buffer
