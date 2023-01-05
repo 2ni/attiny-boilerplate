@@ -1,8 +1,9 @@
 /*
  * mcu: attiny3217
  * communicte with uart
+ * use nodebug to not output anything (does not make much sense in this example, but mentioned for reference)
  *
- * make mcu=attiny3217 flash
+ * make mcu=attiny3217 [nodebug=1] flash
  */
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -10,7 +11,11 @@
 #include "misc.h"
 
 // UART uart(USART0, PORTA, PIN2_bm, PIN1_bm, 19200);
-UART uart;
+#ifdef DEBUG
+  UART uart;
+#else
+  UARTDUMMY uart;
+#endif
 
 /*
  * isr for tx

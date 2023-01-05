@@ -21,6 +21,35 @@
 #define WARN(str) "\033[33;1m" str "\033[0m"  // output in yellow
 #define BOLD(str) "\033[1m" str "\033[0m"     // output bold
 
+/*
+ * this class can be used if eg we want to toggle all the output
+ * without the need to change/remove all output manually
+ *
+ *   #ifdef DEBUG
+ *     UART uart;
+ *   #else
+ *     UARTDUMMY uart;
+ *   #endif
+ */
+class UARTDUMMY {
+  public:
+    UARTDUMMY() {}
+    UARTDUMMY(USART_t &USART, PORT_t &PORT, uint8_t PIN_RX, uint8_t PIN_TX, uint16_t BPS) {}
+    void     init(USART_t &USART, PORT_t &PORT, uint8_t PIN_RX, uint8_t PIN_TX, uint16_t BPS=19200) {}
+    void     init() {}
+    void     hello() {}
+    void     enable_rx() {}
+    uint8_t  is_busy() { return 0; }
+    uint8_t  u2c(char *buf, uint16_t value, uint8_t precision=2) { return 0; }
+    uint8_t  sec2human(char *buf, uint16_t seconds) { return 0; }
+    void     isr_tx() {}
+    void     ARR(const char *name, uint8_t *arr, uint8_t len, uint8_t newline = 0) {}
+    void     D(const char *str) {}
+    void     DL(const char *str) {}
+    template<typename... Args>
+    void     DF(const char *format, Args... args) {}
+};
+
 class UART {
   public:
     UART();
