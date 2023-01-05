@@ -7,7 +7,6 @@
  */
 #include <util/delay.h>
 #include <avr/io.h>
-#include <avr/pgmspace.h> // for PSTR
 #include <avr/interrupt.h>
 #include "uart.h"
 #include "misc.h"
@@ -35,6 +34,6 @@ int main(void) {
   while (1) {
     PORTB.OUTTGL = PIN5_bm;
     _delay_ms(500);
-    uart.DL(PSTR("blink"));
+    uart.DL("blink");
   }
 }

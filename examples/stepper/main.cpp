@@ -15,7 +15,6 @@
 #include <util/delay.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <avr/pgmspace.h> // for PSTR
 #include "uart.h"
 #include "stepper.h"
 #include "misc.h"
@@ -126,7 +125,7 @@ int main(void) {
     }
   }
 
-  uart.DL(PSTR("1=left, 0=right"));
+  uart.DL("1=left, 0=right");
   stepper.init(PORTA, PIN7_bm, PIN6_bm, PORTB, PIN2_bm, PIN3_bm, &current_tick);
   while (1) {
     stepper.loop();
