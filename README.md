@@ -55,4 +55,4 @@ A simple led blinking. You can load it with ./activate examples/blink
 - [DCC simulator](/examples/dcc-simulator)
 Simulator to test eg turnouts/trackswitches or decoders for model railroads
 - [Stepper](/examples/stepper)
-Control a 4-wire stepper motor
+Control a 2-phas 4-wire stepper motor such as the [ultra-micro 10mm stroke linear actuator](https://www.aliexpress.com/item/1005001421552415.html?spm=a2g0o.order_list.order_list_main.10.28a71802Wkpd9u)
