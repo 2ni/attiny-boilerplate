@@ -44,7 +44,7 @@ You can now start coding. You can put your files directly into the folder src/ o
 ```
 ./activate examples/blink                                         # loads a project into src/
 make clean                                                        # when activating a new project, you need to have a clean setup
-make [port=1] [mcu=attiny3217] [clk=10000000] flash               # if port not given, it tries to get it, mcu defaults to attiny3217
+make [port=1] [mcu=attiny3217] [clk=10000000] flash               # if port not given, it tries to detect it, mcu defaults to attiny3217
 make [mcu=attiny3217] reset                                       # resets mcu
 make [mcu=attiny3217] check                                       # checks the connection
 ```
