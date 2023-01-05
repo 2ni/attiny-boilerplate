@@ -3,7 +3,6 @@
 
 #include <avr/io.h>
 #include <stdio.h>
-#include <avr/pgmspace.h> // for PSTR
 
 // can be overwritten, if set before calling "uart.h"
 #ifndef TX_BUFF_SIZE
@@ -77,7 +76,7 @@ class UART {
   private:
     void     send_char(unsigned char c);
     void     send_string(char *s);
-    void     send_string_p(const char *s);
+    void     send_string(const char *s);
 
     uint8_t tx_buff[TX_BUFF_SIZE];
     uint8_t tx_in; // pointer of filling buffer

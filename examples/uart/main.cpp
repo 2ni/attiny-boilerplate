@@ -56,6 +56,6 @@ int main(void) {
   uint8_t c = 254;
   uart.DF("c: %u\n", c);
   uart.DF("hex: 0x%02x\n", c);
-  uart.DL(PSTR("hello"));
+  uart.DL("hello");
   while (1);
 }

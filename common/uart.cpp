@@ -67,8 +67,8 @@ void UART::send_string(char *s) {
   while (*s) send_char(*s++);
 }
 
-void UART::send_string_p(const char *s) {
-  while (pgm_read_byte(s)) send_char(pgm_read_byte(s++));
+void UART::send_string(const char *s) {
+  while (*s) send_char(*s++);
 }
 
 uint8_t UART::is_busy() {
@@ -210,7 +210,7 @@ void UART::ARR(const char *name, uint8_t *arr, uint8_t len, uint8_t newline) {
 
 
 void UART::D(const char *str) {
-  send_string_p(str);
+  send_string(str);
 }
 
 /*
@@ -219,5 +219,5 @@ void UART::D(const char *str) {
  */
 void UART::DL(const char *str) {
   D(str);
-  send_string_p("\n");
+  send_string("\n");
 }
