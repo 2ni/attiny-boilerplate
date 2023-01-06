@@ -569,6 +569,8 @@ int main(void) {
 
   PORTMUX.CTRLB = PORTMUX_USART0_ALTERNATE_gc | PORTMUX_SPI0_ALTERNATE_gc; // alternate pins for uart, spi
 
+  flash(PORTB, PIN5_bm);
+
   uart.hello();
   uart.enable_rx();
 
