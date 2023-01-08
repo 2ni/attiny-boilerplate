@@ -402,7 +402,7 @@ void split_addr(uint16_t addr, uint8_t *module_addr, uint8_t *port, uint8_t is_r
  * R: direction/output (0:left/diverting/stop, 1:right/straight/run)
  *
  */
-void basic_accessory(uint16_t addr, uint8_t activation, uint8_t output, uint8_t is_roco = 0) {
+void basic_accessory(uint16_t addr, uint8_t power, uint8_t direction, uint8_t is_roco = 0) {
   uint8_t packets[2];
   uint8_t module_addr;
   uint8_t port;
@@ -411,13 +411,15 @@ void basic_accessory(uint16_t addr, uint8_t activation, uint8_t output, uint8_t 
   // we use output addressing from the given address
   // the decoder can interpret the incoming data as output or decoder addressing
   packets[0] = 0x80 | (module_addr & 0x3f);
-  packets[1] = 0x80 | ((~module_addr & 0x1c0)>>2) | ((port & 0x03)<<1) | (activation ? 0x01<<3 : 0) | (output ? 0x01 : 0);
+  packets[1] = 0x80 | ((~module_addr & 0x1c0)>>2) | ((port & 0x03)<<1) | (power ? 0x01<<3 : 0) | (direction ? 0x01 : 0);
   send_packet(packets, 2);
   // uart.ARR("packets", packets, 2);
 }
 
 /*
  * accessory decoder configuration variable access
+ * 3+ reset packets, 5+ command packets, reset packets until got ack/timeout
+ *
  * basic/ops     {preamble} 0 10AAAAAA 0 1AAA1AA0 0 1110CCVV 0 VVVVVVVV 0 DDDDDDDD 0 EEEEEEEE 1
  * basic/service {preamble} 0                       0111CCVV 0 VVVVVVVV 0 DDDDDDDD 0 EEEEEEEE 1
  *
@@ -446,8 +448,7 @@ void basic_accessory_prg(uint16_t addr, PRG::Type_Prg_Mode mode, PRG::Type_Prg_C
 
   // send reset packets 1st (only in service mode before 1st packet)
   if (mode == PRG::SERVICE && !skip_resets) {
-    // changed: we only send 1 reset packet instead of 25
-    for (uint8_t c=0; c<1; c++) {
+    for (uint8_t c=0; c<3; c++) {
       send_packet(packets, 2, mode);
     }
   }
@@ -466,10 +467,15 @@ void basic_accessory_prg(uint16_t addr, PRG::Type_Prg_Mode mode, PRG::Type_Prg_C
   packets[index] = cmd_start | (cmd_type<<2) | ((cv_addr & 0x300)>>8);
   packets[index+1] = 0xff & cv_addr;
   packets[index+2] = cv_data;
-  send_packet(packets, num, mode);
+  uint8_t repetitions = 1;
+  // service mode requires 5+ repetitions
+  if (mode == PRG::SERVICE) repetitions = 5;
   // write requires 2 similar packets while in ops mode (in real env)
-  if (mode == PRG::OPS && (cmd_type == PRG::WRITE || (cmd_type == PRG::BIT && cv_data & 0x10))) send_packet(packets, num, mode);
+  else if (mode == PRG::OPS && (cmd_type == PRG::WRITE || (cmd_type == PRG::BIT && cv_data & 0x10))) repetitions = 2;
 
+  for (uint8_t c=0; c<repetitions; c++) {
+    send_packet(packets, num, mode);
+  }
   // uart.ARR("prg", packets, num);
   // activate (=send) newest buffer entries
   // resume_buffer_processing(pause);
@@ -596,27 +602,46 @@ int main(void) {
 
   timer_init();
 
+  uint8_t repetitions = 0;
   while  (1) {
     switch (cmd_state) {
       case CMD_STATE::TURN_LEFT:
         if (is_extended_mode) {
           extended_accessory(decoder_addr, 0);
+          if (++repetitions == 4) {
+            repetitions = 0;
+            cmd_state = CMD_STATE::NONE;
+          }
         } else {
-          basic_accessory(decoder_addr, 0, 0, 0); // addr, activation, output, is_roco
+          basic_accessory(decoder_addr, repetitions < 4, 0, 0); // addr, power, direction, is_roco
+          if (++repetitions == 8) {
+            repetitions = 0;
+            cmd_state = CMD_STATE::NONE;
+          }
         }
-        port_outputs &= ~(1<<7); // clear bit 7
-        print_outputs(port_outputs);
-        cmd_state = CMD_STATE::NONE;
+        if (repetitions == 1) {
+          port_outputs &= ~(1<<7); // clear bit 7
+          print_outputs(port_outputs);
+        }
         break;
       case CMD_STATE::TURN_RIGHT:
         if (is_extended_mode) {
           extended_accessory(decoder_addr, 1);
+          if (++repetitions == 4) {
+            repetitions = 0;
+            cmd_state = CMD_STATE::NONE;
+          }
         } else {
-          basic_accessory(decoder_addr, 0, 1, 0);
+          basic_accessory(decoder_addr, repetitions < 4, 1, 0);
+          if (++repetitions == 8) {
+            repetitions = 0;
+            cmd_state = CMD_STATE::NONE;
+          }
         }
-        port_outputs |= (1 << 7); // set bit 7
-        print_outputs(port_outputs);
-        cmd_state = CMD_STATE::NONE;
+        if (repetitions == 1) {
+          port_outputs |= (1 << 7); // set bit 7
+          print_outputs(port_outputs);
+        }
         break;
       case CMD_STATE::TOGGLE_IDLE:
         fill_with_idle = !fill_with_idle;
@@ -653,8 +678,8 @@ int main(void) {
       case CMD_STATE::PROCESS_UART_CMD:
         if (get_prev_chars(buff, uart_cmd, 4) && !strcmp(uart_cmd, "help")) {
           uart.DL("usage:");
-          uart.DF("  %u : turn left\n", CMD_STATE::TURN_LEFT);
-          uart.DF("  %u : turn right\n", CMD_STATE::TURN_RIGHT);
+          uart.DF("  %u : turn left/diverting/red\n", CMD_STATE::TURN_LEFT);
+          uart.DF("  %u : turn right/straight/green\n", CMD_STATE::TURN_RIGHT);
           uart.DF("  %u : %s|%s idle packets in between (toggle)\n", CMD_STATE::TOGGLE_IDLE, fill_with_idle ? OK("yes") : "yes", fill_with_idle ? "no": OK("no"));
           uart.DF("  %u : %s|%s mode (toggle)\n", CMD_STATE::TOGGLE_EXTENDED, is_extended_mode ? "basic" : OK("basic"), is_extended_mode ? OK("extended") : "extended");
           uart.DF("  %u : %s|%s prg mode (toggle)\n", CMD_STATE::TOGGLE_PRG_MODE, prg_mode == PRG::OPS ? "service" : OK("service"), prg_mode == PRG::OPS ? OK("ops") : "ops");
