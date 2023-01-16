@@ -3,7 +3,7 @@
 STEPPER::STEPPER() {
 }
 
-void STEPPER::init(PORT_t &PA, uint8_t INA1, uint8_t INA2, PORT_t &PB, uint8_t INB1, uint8_t INB2, uint32_t *current_tick) {
+void STEPPER::init(PORT_t &PA, uint8_t INA1, uint8_t INA2, PORT_t &PB, uint8_t INB1, uint8_t INB2, volatile uint32_t *current_tick) {
   this->PA = &PA;
   this->PA->DIR |= INA1 | INA2;
   this->INA1 = INA1;

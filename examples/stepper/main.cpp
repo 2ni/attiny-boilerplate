@@ -21,7 +21,7 @@
 
 UART uart;
 STEPPER stepper;
-uint32_t current_tick = 0;
+volatile uint32_t current_tick = 0;
 volatile uint8_t limit = 0;
 
 /*
