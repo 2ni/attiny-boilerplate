@@ -116,8 +116,13 @@ check:
 # port can be overruled with: make flash port=1
 # mcu can be overruled with: make flash mcu=attiny1604
 flash: all
-	@echo "flashing to $(PORT). Pls wait..."
+	@echo "flashing & uart on $(PORT). Pls wait..."
 	@$(PYPRG) --erase write -f $(PRJ).hex && echo "done." && echo "\a" && $(MAKE) serial  port=$(PORT) # && afplay /System/Library/Sounds/Ping.aiff -v 10
+
+flashonly: all
+	@echo "flashing on $(PORT). Pls wait..."
+	@$(PYPRG) --erase write -f $(PRJ).hex && echo "done." && echo "\a"
+
 
 # reset device
 reset:
