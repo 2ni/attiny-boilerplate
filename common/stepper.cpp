@@ -103,6 +103,10 @@ void STEPPER::move(int16_t steps, uint8_t speed) {
   last_tick = *current_tick;
 }
 
+uint8_t STEPPER::is_moving() {
+  return this->steps_left ? 1 : 0;
+}
+
 void STEPPER::loop(void (*fn)()) {
   // move as long as steps_left <> 0
   if (steps_left && (*current_tick - last_tick) > speed) {

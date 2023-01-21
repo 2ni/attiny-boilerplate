@@ -11,6 +11,7 @@ class STEPPER {
     void stop();
     void keep();
     void move(int16_t steps, uint8_t ticks);
+    uint8_t is_moving();
     void loop(void (*fn)() = 0);
 
   private:
