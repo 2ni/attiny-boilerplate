@@ -581,7 +581,7 @@ int main(void) {
   uart.enable_rx();
 
   decoder_addr = eeprom_read_word(&ee_decoder_addr);
-  if (decoder_addr == 0xffff) decoder_addr = 0x05; // default 267=0x10b
+  if (decoder_addr == 0xffff) decoder_addr = 0x105; // default 261=0x105
   uart.DF("address in use: %u\n", decoder_addr);
 
   PORTC.DIR |= PIN4_bm | PIN5_bm;
