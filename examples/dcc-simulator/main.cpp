@@ -20,6 +20,10 @@ UART uart;
 UARTDUMMY uart;
 #endif
 
+volatile uint32_t current_tick = 0;
+volatile uint8_t rtc_consumed = 1;
+uint8_t rtc_count = 0;
+uint8_t is_red = 1;
 volatile uint8_t done = 0;
 char buff[20];
 char uart_data[20];
@@ -31,6 +35,7 @@ namespace CMD_STATE {
     NONE,
     TURN_LEFT,
     TURN_RIGHT,
+    TURN_AUTO,
     TOGGLE_IDLE,
     TOGGLE_EXTENDED,
     TOGGLE_PRG_MODE,
@@ -60,7 +65,8 @@ namespace PRG {
 // predefine buffer for idle packets
 #define BUFF_IDLE_SIZE_BYTES 5
 uint8_t buffer_idle_packets[BUFF_IDLE_SIZE_BYTES] = { 0xff, 0xf7, 0xf8, 0x01, 0xff };
-uint8_t fill_with_idle = 0;
+volatile uint8_t fill_with_idle = 0;
+uint8_t turn_auto_on = 0;
 volatile int8_t idle_packets_p = -1;
 
 // R = PB6, L = PB7 to control motor driver
@@ -214,6 +220,15 @@ ISR(TCA0_OVF_vect) {
 }
 
 /*
+ * isr for rtc tick every ~1ms
+ */
+ISR(RTC_CNT_vect) {
+  RTC.INTFLAGS = RTC_OVF_bm;
+  current_tick++;
+  rtc_consumed = 0;
+}
+
+/*
  * get <num_of_chars> chars before current pointer of ring buffer
  */
 uint8_t get_prev_chars(char *buff, char *data, uint8_t num_of_chars) {
@@ -285,6 +300,7 @@ ISR(USART0_RXC_vect) {
     switch (in) {
       case '0'+CMD_STATE::TURN_LEFT : cmd_state = CMD_STATE::TURN_LEFT; break;
       case '0'+CMD_STATE::TURN_RIGHT: cmd_state = CMD_STATE::TURN_RIGHT; break;
+      case '0'+CMD_STATE::TURN_AUTO: cmd_state = CMD_STATE::TURN_AUTO; break;
       case '0'+CMD_STATE::TOGGLE_IDLE: cmd_state = CMD_STATE::TOGGLE_IDLE; break;
       case '0'+CMD_STATE::TOGGLE_EXTENDED: cmd_state = CMD_STATE::TOGGLE_EXTENDED; break;
       case '0'+CMD_STATE::TOGGLE_PRG_MODE: cmd_state = CMD_STATE::TOGGLE_PRG_MODE; break;
@@ -399,7 +415,7 @@ void split_addr(uint16_t addr, uint8_t *module_addr, uint8_t *port, uint8_t is_r
  * a: address bit complement
  * C: power/activation (0=inactive, 1=active)
  * D: port (0-3)
- * R: direction/output (0:left/diverting/stop, 1:right/straight/run)
+ * R: direction/output (0:left/diverting/stop/red, 1:right/straight/run/green)
  *
  */
 void basic_accessory(uint16_t addr, uint8_t power, uint8_t direction, uint8_t is_roco = 0) {
@@ -602,6 +618,14 @@ int main(void) {
 
   timer_init();
 
+  // rtc isr running every 500ms (= 16384/32768 ms)
+  while (RTC.STATUS > 0);
+  RTC.CLKSEL = RTC_CLKSEL_INT32K_gc;
+  RTC.INTCTRL = RTC_OVF_bm;
+  RTC.CNT = 0;
+  RTC.PER = 16384;
+  RTC.CTRLA = RTC_PRESCALER_DIV1_gc | RTC_RTCEN_bm | RTC_RUNSTDBY_bm;
+
   uint8_t repetitions = 0;
   while  (1) {
     switch (cmd_state) {
@@ -643,9 +667,16 @@ int main(void) {
           print_outputs(port_outputs);
         }
         break;
+      case CMD_STATE::TURN_AUTO:
+        if (turn_auto_on == 1) turn_auto_on = 2;
+        else if (!turn_auto_on) turn_auto_on = 1;
+        uart.DF("(%u) autoturn: %s\n", CMD_STATE::TURN_AUTO, turn_auto_on == 2 && !is_red ? "turning off" : (turn_auto_on ? "yes" : "no"));
+        cmd_state = CMD_STATE::NONE;
+        break;
       case CMD_STATE::TOGGLE_IDLE:
         fill_with_idle = !fill_with_idle;
         uart.DF("(%u) fill with idle: %s\n", CMD_STATE::TOGGLE_IDLE, fill_with_idle ? "yes" : "no");
+        rtc_count = 0;
         cmd_state = CMD_STATE::NONE;
         break;
       case CMD_STATE::TOGGLE_EXTENDED:
@@ -680,6 +711,7 @@ int main(void) {
           uart.DL("usage:");
           uart.DF("  %u : turn left/diverting/red\n", CMD_STATE::TURN_LEFT);
           uart.DF("  %u : turn right/straight/green\n", CMD_STATE::TURN_RIGHT);
+          uart.DF("  %u : %s|%s autoturn (toggle)\n", CMD_STATE::TURN_AUTO, turn_auto_on ? OK("yes") : "yes", turn_auto_on ? "no": OK("no"));
           uart.DF("  %u : %s|%s idle packets in between (toggle)\n", CMD_STATE::TOGGLE_IDLE, fill_with_idle ? OK("yes") : "yes", fill_with_idle ? "no": OK("no"));
           uart.DF("  %u : %s|%s mode (toggle)\n", CMD_STATE::TOGGLE_EXTENDED, is_extended_mode ? "basic" : OK("basic"), is_extended_mode ? OK("extended") : "extended");
           uart.DF("  %u : %s|%s prg mode (toggle)\n", CMD_STATE::TOGGLE_PRG_MODE, prg_mode == PRG::OPS ? "service" : OK("service"), prg_mode == PRG::OPS ? OK("ops") : "ops");
@@ -812,6 +844,23 @@ int main(void) {
         break;
       default:
         break;
+    }
+
+    // rtc is configured to to count every 500ms
+    // repetition: (rtc_count+1)*500ms
+    if (turn_auto_on && !rtc_consumed) {
+      rtc_consumed = 1;
+      if (rtc_count++ == 19) {
+        rtc_count = 0;
+        is_red = !is_red;
+        uart.DF("position: %s\n", is_red ? "red" : "green");
+        cmd_state = is_red ? CMD_STATE::TURN_LEFT : CMD_STATE::TURN_RIGHT;
+      }
+      // request to turn off, ensure always stops on is_red = 0
+      if (turn_auto_on == 2 && is_red) {
+        turn_auto_on = 0;
+        uart.DF("(%u) autoturn: no\n", CMD_STATE::TURN_AUTO);
+      }
     }
   }
 }
